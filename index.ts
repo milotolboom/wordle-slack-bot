@@ -238,7 +238,8 @@ const getUserStats = async (): Promise<UserStat[]> => {
         const wins = entries.filter((entry) => entry.score > 0).length;
         const averageSolvedAt = entries.map((entry) => entry.score).reduce((acc, curr) => {
             // Failures to guess (0) should be counted as 2 penalty points (6 + 2)
-            const normalizedScore = curr === 0 ? 8 : curr;
+            // We multiply by 100 to make score more arbitrary
+            const normalizedScore = (curr === 0 ? 8 : curr) * 100;
             return acc + normalizedScore;
         }) / entries.length;
 
@@ -246,7 +247,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
             name: getUserName(userId),
             played: entries.length,
             wins,
-            averageSolvedAt,
+            averageSolvedAt: Math.round(averageSolvedAt),
         })
     });
 
