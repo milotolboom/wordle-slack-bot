@@ -10,29 +10,47 @@ const app = new App({
     appToken: process.env.APP_TOKEN
 });
 
-const submissionsChannel = "wordle";
-const answersChannel = "wordle-answers";
+const submissionsChannelName = "wordle";
+const answersChannelName = "wordle-answers";
 
-app.message(/^(Wordle \d{3} \d\/\d)*/, async ({ client, message, say }) => {
+app.message(/^(Wordle \d{3} \d\/\d).*/, async ({ client, message, say }) => {
     const event = <GenericMessageEvent><unknown>message
 
     if (!event) {
         return console.log("Message is not GenericMessageEvent")
     }
 
+   const channelName = await getChannelName(event.channel, client);
     // Needs to be in the right channel
-    if (event.channel !== submissionsChannel) {
-        return
+    if (channelName !== submissionsChannelName) {
+        return console.log("This is not the submissions channel!" + channelName);
     }
 
     const userId = event.user;
-    await addUserToChannel(userId, answersChannel, client);
+    const answersChannel = await getChannelByName(answersChannelName, client);
+    console.log(answersChannel);
+    if (answersChannel && answersChannel.id) {
+        // If final user leaves channel, it is automatically archived (atleast through GUI)
+        // if (answersChannel.is_archived) {
+        //     await client.conversations.unarchive({channel: answersChannel.id})
+        // }
 
-    console.log("Wordle entry recognized");
+        await addUserToChannel(userId, answersChannel.id, client);
+        return console.log("Wordle entry recognized");
+    }
+    return console.log("Yepcock")
 });
 
+const getChannelName = async(channelId: string, client: WebClient) => {
+    return (await client.conversations.info({ channel: channelId })).channel?.name
+}
+
+const getChannelByName = async(name: string, client: WebClient) => {
+    return (await client.conversations.list({types: "public_channel,private_channel"})).channels?.find(channel => channel.name == name);
+}
+
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
-    await client.channels.invite({ user: userId, channel });
+    await client.conversations.invite({ channel: channel, users: userId });
 }
 
 (async () => {
