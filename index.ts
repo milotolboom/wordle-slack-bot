@@ -1,4 +1,4 @@
-import {App} from "@slack/bolt";
+import {App, SayFn} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
 import { PrismaClient } from "@prisma/client";
@@ -28,6 +28,20 @@ app.message(/^(Wordle \d{3} \d\/\d)*/, async ({ client, message, say }) => {
         return
     }
 
+    const result = await registerEntry(event);
+
+    switch (result) {
+        case RegisterEntryResult.SUCCESS:
+            // Success, we can continue;
+            break;
+        case RegisterEntryResult.USER_NOT_REGISTERED:
+            await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using /register yournamehere");
+            return;
+        case RegisterEntryResult.ALREADY_ENTERED_TODAY:
+            await say("You already registered an entry today. You can post your new results tomorrow.");
+            return;
+    }
+
     const userId = event.user;
     await addUserToChannel(userId, answersChannel, client);
 
@@ -48,6 +62,50 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
         await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later!")
     }
 });
+
+enum RegisterEntryResult {
+    SUCCESS, USER_NOT_REGISTERED, ALREADY_ENTERED_TODAY
+}
+
+const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryResult> => {
+    const message = event.text;
+    const userId = event.user;
+
+    const user = await prisma.user.findFirst({
+        where: {
+            id: userId,
+        }
+    })
+
+    if (!user) {
+        return RegisterEntryResult.USER_NOT_REGISTERED;
+    }
+
+    const latestEntry = await prisma.entry.findFirst({
+        where: {
+            userId,
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+
+    if (!latestEntry) {
+        return RegisterEntryResult.ALREADY_ENTERED_TODAY;
+    }
+
+    const score = message.
+
+    await prisma.entry.create({
+        data: {
+            userId,
+            rawResult: message || "",
+            score: 5,
+        }
+    })
+
+    return RegisterEntryResult.SUCCESS;
+};
 
 const composeLeaderboardMessage = (stats: UserStat[]): string => {
     const userStats = stats.map((stat) => `
