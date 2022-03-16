@@ -233,7 +233,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
 
     const allUsers = [...new Set(allEntries.map((it) => it.userId))];
 
-    return allUsers.map((userId) => {
+    const stats: UserStat[] = allUsers.map((userId) => {
         const entries = allEntries.filter((entry) => entry.userId === userId);
         const wins = entries.filter((entry) => entry.score > 0).length;
         const averageSolvedAt = entries.map((entry) => entry.score).reduce((acc, curr) => {
@@ -249,6 +249,8 @@ const getUserStats = async (): Promise<UserStat[]> => {
             averageSolvedAt,
         })
     });
+
+    return stats.sort((a, b) => a.averageSolvedAt - b.averageSolvedAt);
 };
 
 (async () => {
