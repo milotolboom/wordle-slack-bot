@@ -12,7 +12,7 @@ model Entry {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  rawResult String   @db.VarChar(255)
+  rawResult String
   score     Int
   user      User     @relation(fields: [userId], references: [id])
   userId    String

@@ -33,6 +33,7 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({ client, message, say }) =>
 
     switch (result) {
         case RegisterEntryResult.SUCCESS:
+            await say("Your Wordle entry was successfully submitted! 🎉")
             const userId = event.user;
             const answersChannel = await getChannelByName(answersChannelName, client);
 
@@ -146,6 +147,12 @@ enum RegisterEntryResult {
     SUCCESS, USER_NOT_REGISTERED, ALREADY_ENTERED_TODAY, INVALID_SCORE
 }
 
+const isSameDate = (a: Date, b: Date): boolean => {
+    return a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+}
+
 const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryResult> => {
     const message = event.text;
     const userId = event.user;
@@ -169,13 +176,18 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
         }
     });
 
-    if (!latestEntry) {
-        return RegisterEntryResult.ALREADY_ENTERED_TODAY;
+    if (latestEntry) {
+        const latestEntryDate = new Date(latestEntry.createdAt);
+        const currentDate = new Date();
+
+        if (isSameDate(latestEntryDate, currentDate)) {
+            return RegisterEntryResult.ALREADY_ENTERED_TODAY;
+        }
     }
 
     const rawScore = message?.match(/(\d|X)\/6/) || [];
     const guesses = rawScore[0][0];
-    const score = guesses === "X" ? 0 : +rawScore;
+    const score: number = guesses === "X" ? 0 : +guesses;
 
     if (score > 5 || score < 1) {
         return RegisterEntryResult.INVALID_SCORE;
