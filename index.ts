@@ -1,4 +1,4 @@
-import {App, SayFn} from "@slack/bolt";
+import {App, SayFn, SlashCommand} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
 import { PrismaClient } from "@prisma/client";
@@ -32,8 +32,10 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
 
     switch (result) {
         case RegisterEntryResult.SUCCESS:
-            // Success, we can continue;
-            break;
+            const userId = event.user;
+            await addUserToChannel(userId, answersChannel, client);
+            console.log("Wordle entry recognized, user added to channel");
+            return;
         case RegisterEntryResult.USER_NOT_REGISTERED:
             await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using /register yournamehere");
             return;
@@ -44,11 +46,25 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
             await say("Ey niffo your score is not 1, 2, 3, 4, 5 or X. Stop trying to cheat the system.");
             return;
     }
+});
 
-    const userId = event.user;
-    await addUserToChannel(userId, answersChannel, client);
+app.command('/register', async ({ command, ack, say }) => {
+    try {
+        await ack();
+        const result = await registerUser(command);
 
-    console.log("Wordle entry recognized");
+        switch (result) {
+            case RegisterUserResult.ALREADY_EXISTS:
+                await say("You already registered.")
+                return;
+            case RegisterUserResult.SUCCESS:
+                await say("You successfully registered for the wordle battle royale.")
+                return;
+        }
+    } catch (error) {
+        console.error(error);
+        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 1");
+    }
 });
 
 app.command('/leaderboard', async ({ command, ack, say }) => {
@@ -62,9 +78,37 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
         await say(returnMessage);
     } catch (error) {
         console.error(error);
-        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later!")
+        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 2")
     }
 });
+
+enum RegisterUserResult {
+    SUCCESS, ALREADY_EXISTS
+}
+
+const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> => {
+    const userId = command.user_id;
+    const username = command.text;
+
+    const user = await prisma.user.findFirst({
+        where: {
+            id: userId,
+        }
+    });
+
+    if (user) {
+        return RegisterUserResult.ALREADY_EXISTS;
+    }
+
+    await prisma.user.create({
+        data: {
+            id: userId,
+            name: username,
+        }
+    });
+
+    return RegisterUserResult.SUCCESS;
+};
 
 enum RegisterEntryResult {
     SUCCESS, USER_NOT_REGISTERED, ALREADY_ENTERED_TODAY, INVALID_SCORE
@@ -78,7 +122,7 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
         where: {
             id: userId,
         }
-    })
+    });
 
     if (!user) {
         return RegisterEntryResult.USER_NOT_REGISTERED;
