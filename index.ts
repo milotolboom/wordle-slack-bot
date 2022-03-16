@@ -73,7 +73,7 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({client, message, say}) => {
     }
 });
 
-app.command('/register', async ({command, ack, say}) => {
+app.command('/wordle-register', async ({command, ack, say}) => {
     try {
         await ack();
         const result = await registerUser(command);
@@ -92,7 +92,7 @@ app.command('/register', async ({command, ack, say}) => {
     }
 });
 
-app.command('/leaderboard', async ({command, ack, say}) => {
+app.command('/wordle-leaderboard', async ({command, ack, say}) => {
     try {
         await ack();
 
