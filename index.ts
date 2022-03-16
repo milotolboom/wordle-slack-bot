@@ -161,8 +161,8 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
 };
 
 const composeLeaderboardMessage = (stats: UserStat[]): string => {
-    const userStats = stats.map((stat) => `
-        • ${stat.name} | Average solve score ${stat.averageSolvedAt} | Played ${stat.played} | Wins ${stat.wins} 
+    const userStats = stats.map((stat, index) => `
+        ${index + 1}. ${stat.name} | Average solve score ${stat.averageSolvedAt} | Played ${stat.played} | Wins ${stat.wins} 
     `);
 
     return `
