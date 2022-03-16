@@ -50,11 +50,18 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
 });
 
 const composeLeaderboardMessage = (stats: UserStat[]): string => {
+    const userStats = stats.map((stat) => `
+        • ${stat.name} | Average solve score ${stat.averageSolvedAt} | Played ${stat.played} | Wins ${stat.wins} 
+    `);
 
-    return "";
+    return `
+    **🧠 Wordle Leaderboard 🧠**\n\n
+    ${userStats.join('\n')}
+    `
 }
 
 interface UserStat {
+    name: string;
     played: number;
     wins: number;
     averageSolvedAt: number;
@@ -77,6 +84,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
         });
 
         return ({
+            name: userId, // TODO create register option
             played: entries.length,
             wins,
             averageSolvedAt,
