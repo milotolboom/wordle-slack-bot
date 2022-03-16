@@ -40,6 +40,9 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
         case RegisterEntryResult.ALREADY_ENTERED_TODAY:
             await say("You already registered an entry today. You can post your new results tomorrow.");
             return;
+        case RegisterEntryResult.INVALID_SCORE:
+            await say("Ey niffo your score is not 1, 2, 3, 4, 5 or X. Stop trying to cheat the system.");
+            return;
     }
 
     const userId = event.user;
@@ -64,7 +67,7 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
 });
 
 enum RegisterEntryResult {
-    SUCCESS, USER_NOT_REGISTERED, ALREADY_ENTERED_TODAY
+    SUCCESS, USER_NOT_REGISTERED, ALREADY_ENTERED_TODAY, INVALID_SCORE
 }
 
 const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryResult> => {
@@ -94,13 +97,19 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
         return RegisterEntryResult.ALREADY_ENTERED_TODAY;
     }
 
-    const score = message.
+    const rawScore = message?.match(/(\d|X)\/6/) || [];
+    const guesses = rawScore[0][0];
+    const score = guesses === "X" ? 0 : +rawScore;
+
+    if (score > 5 || score < 1) {
+        return RegisterEntryResult.INVALID_SCORE;
+    }
 
     await prisma.entry.create({
         data: {
             userId,
             rawResult: message || "",
-            score: 5,
+            score,
         }
     })
 
