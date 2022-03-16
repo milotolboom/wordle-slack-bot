@@ -13,8 +13,8 @@ const app = new App({
     appToken: process.env.APP_TOKEN
 });
 
-const submissionsChannel = "wordle";
-const answersChannel = "wordle-answers";
+const submissionsChannelName = "wordle";
+const answersChannelName = "wordle-answers";
 
 app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => {
     const event = <GenericMessageEvent><unknown>message
@@ -23,9 +23,10 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
         return console.log("Message is not GenericMessageEvent")
     }
 
+   const channelName = await getChannelName(event.channel, client);
     // Needs to be in the right channel
-    if (event.channel !== submissionsChannel) {
-        return
+    if (channelName !== submissionsChannelName) {
+        return console.log("This is not the submissions channel!" + channelName);
     }
 
     const result = await registerEntry(event);
@@ -33,8 +34,18 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
     switch (result) {
         case RegisterEntryResult.SUCCESS:
             const userId = event.user;
-            await addUserToChannel(userId, answersChannel, client);
-            console.log("Wordle entry recognized, user added to channel");
+            const answersChannel = await getChannelByName(answersChannelName, client);
+            console.log(answersChannel);
+            if (answersChannel && answersChannel.id) {
+                // If final user leaves channel, it is automatically archived (atleast through GUI)
+                // if (answersChannel.is_archived) {
+                //     await client.conversations.unarchive({channel: answersChannel.id})
+                // }
+
+                await addUserToChannel(userId, answersChannel.id, client);
+                return console.log("Wordle entry recognized");
+            }
+            console.log("Yepcock");
             return;
         case RegisterEntryResult.USER_NOT_REGISTERED:
             await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using /register yournamehere");
@@ -81,6 +92,14 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
         await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 2")
     }
 });
+
+const getChannelName = async(channelId: string, client: WebClient) => {
+    return (await client.conversations.info({ channel: channelId })).channel?.name
+}
+
+const getChannelByName = async(name: string, client: WebClient) => {
+    return (await client.conversations.list({types: "public_channel,private_channel"})).channels?.find(channel => channel.name == name);
+}
 
 enum RegisterUserResult {
     SUCCESS, ALREADY_EXISTS
@@ -204,7 +223,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
 };
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
-    await client.channels.invite({ user: userId, channel });
+    await client.conversations.invite({ channel: channel, users: userId });
 }
 
 (async () => {

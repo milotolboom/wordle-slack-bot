@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node index.ts",
+    "purge": "ts-node purge.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,8 @@
   },
   "dependencies": {
     "@prisma/client": "^3.11.0",
-    "@slack/bolt": "^3.10.0"
+    "@slack/bolt": "^3.10.0",
+    "dotenv": "^16.0.0",
+    "ts-node": "^10.7.0"
   }
 }
