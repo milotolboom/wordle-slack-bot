@@ -11,14 +11,13 @@ const app = new App({
 
 const kickAllInChannel = async(name: string, client: WebClient) => {
     const channel = await getChannelByName(name, client);
-
+    const botId = (await client.auth.test()).user_id;
     if (channel) {
-        const members = (await client.conversations.members({ channel: channel.id! })).members;
-        console.log(members);
+        const members = (await client.conversations.members({ channel: channel.id! })).members?.filter ( id => botId != id );
         if (members) {
-            members.forEach ( member => 
+            members.forEach ( member => {
                 client.conversations.kick({channel: channel.id!, user: member})
-            );
+            });
         }
     }
 }
