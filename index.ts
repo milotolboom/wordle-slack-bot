@@ -240,7 +240,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
             // Failures to guess (0) should be counted as 2 penalty points (6 + 2)
             const normalizedScore = curr === 0 ? 8 : curr;
             return acc + normalizedScore;
-        });
+        }) / entries.length;
 
         return ({
             name: getUserName(userId),
