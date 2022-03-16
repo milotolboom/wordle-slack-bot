@@ -13,7 +13,7 @@ const app = new App({
 const submissionsChannelName = "wordle";
 const answersChannelName = "wordle-answers";
 
-app.message(/^(Wordle \d{3} \d\/\d).*/, async ({ client, message, say }) => {
+app.message(/^(Wordle \d{3} \d\/6).*/, async ({ client, message, say }) => {
     const event = <GenericMessageEvent><unknown>message
 
     if (!event) {
