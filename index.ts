@@ -1,7 +1,8 @@
-import {App, SayFn, SlashCommand} from "@slack/bolt";
+import {App, SlashCommand} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
-import { PrismaClient } from "@prisma/client";
+import {PrismaClient} from "@prisma/client";
+
 require("dotenv").config();
 
 const prisma = new PrismaClient();
@@ -16,14 +17,14 @@ const app = new App({
 const submissionsChannelName = "wordle";
 const answersChannelName = "wordle-answers";
 
-app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({ client, message, say }) => {
+app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({client, message, say}) => {
     const event = <GenericMessageEvent><unknown>message
 
     if (!event) {
         return console.log("Message is not GenericMessageEvent")
     }
 
-   const channelName = await getChannelName(event.channel, client);
+    const channelName = await getChannelName(event.channel, client);
     // Needs to be in the right channel
     if (channelName !== submissionsChannelName) {
         return console.log("This is not the submissions channel!" + channelName);
@@ -39,19 +40,22 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({ client, message, say }) =>
 
             if (answersChannel && answersChannel.id) {
                 if (answersChannel.is_archived) {
-                    console.log("Channel \"#"+answersChannelName+"\" is archived. Unarchiving...")
+                    console.log("Channel \"#" + answersChannelName + "\" is archived. Unarchiving...")
                     await client.conversations.unarchive({channel: answersChannel.id})
                 }
 
-                console.log("Adding user to channel \"$"+answersChannel+"\" ")
+                console.log("Adding user to channel \"$" + answersChannel + "\" ")
                 await addUserToChannel(userId, answersChannel.id, client);
             } else {
-                console.log("Channel \"#"+answersChannelName+"\" does not exist yet. Creating...")
+                console.log("Channel \"#" + answersChannelName + "\" does not exist yet. Creating...")
                 // Recreate channel
-                const channel = (await app.client.conversations.create({name: answersChannelName, is_private: true})).channel
+                const channel = (await app.client.conversations.create({
+                    name: answersChannelName,
+                    is_private: true
+                })).channel
 
                 if (channel && channel.id) {
-                    console.log("Adding user to channel \"$"+answersChannel+"\" ")
+                    console.log("Adding user to channel \"$" + answersChannel + "\" ")
                     await addUserToChannel(userId, channel.id, client);
                 }
             }
@@ -69,7 +73,7 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({ client, message, say }) =>
     }
 });
 
-app.command('/register', async ({ command, ack, say }) => {
+app.command('/register', async ({command, ack, say}) => {
     try {
         await ack();
         const result = await registerUser(command);
@@ -88,7 +92,7 @@ app.command('/register', async ({ command, ack, say }) => {
     }
 });
 
-app.command('/leaderboard', async ({ command, ack, say }) => {
+app.command('/leaderboard', async ({command, ack, say}) => {
     try {
         await ack();
 
@@ -103,16 +107,16 @@ app.command('/leaderboard', async ({ command, ack, say }) => {
     }
 });
 
-const getChannelName = async(channelId: string, client: WebClient) => {
-    return (await client.conversations.info({ channel: channelId })).channel?.name
+const getChannelName = async (channelId: string, client: WebClient) => {
+    return (await client.conversations.info({channel: channelId})).channel?.name
 }
 
-const getChannelByName = async(name: string, client: WebClient) => {
+const getChannelByName = async (name: string, client: WebClient) => {
     return (await client.conversations.list({types: "public_channel,private_channel"})).channels?.find(channel => channel.name == name);
 }
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
-    await client.conversations.invite({ channel: channel, users: userId });
+    await client.conversations.invite({channel: channel, users: userId});
 }
 
 enum RegisterUserResult {
@@ -205,14 +209,10 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
 };
 
 const composeLeaderboardMessage = (stats: UserStat[]): string => {
-    const userStats = stats.map((stat, index) => `
-        ${index + 1}. ${stat.name} | Average solve score ${stat.averageSolvedAt} | Played ${stat.played} | Wins ${stat.wins} 
-    `);
+    const userStats = stats.map((stat, index) =>
+        `${index + 1}. @_${stat.name}_ | Average solve score \`${stat.averageSolvedAt}\` | Played \`${stat.played}\` | Lost \`${stat.played - stat.wins}\``);
 
-    return `
-    **🧠 Wordle Leaderboard 🧠**\n\n
-    ${userStats.join('\n')}
-    `
+    return `🧠 *Wordle Leaderboard* 🧠\n\n${userStats.join('\n')}`
 }
 
 interface UserStat {
@@ -224,7 +224,7 @@ interface UserStat {
 
 const getUserStats = async (): Promise<UserStat[]> => {
     const allEntries = await prisma.entry.findMany({
-        include: { user: true }
+        include: {user: true}
     });
 
     const getUserName = (userId: string): string => {
