@@ -227,6 +227,10 @@ const getUserStats = async (): Promise<UserStat[]> => {
         include: { user: true }
     });
 
+    const getUserName = (userId: string): string => {
+        return allEntries.find((it) => it.userId === userId)?.user.name ?? userId;
+    }
+
     const allUsers = [...new Set(allEntries.map((it) => it.userId))];
 
     return allUsers.map((userId) => {
@@ -239,7 +243,7 @@ const getUserStats = async (): Promise<UserStat[]> => {
         });
 
         return ({
-            name: userId, // TODO create register option
+            name: getUserName(userId),
             played: entries.length,
             wins,
             averageSolvedAt,
