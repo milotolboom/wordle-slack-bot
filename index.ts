@@ -16,7 +16,7 @@ const app = new App({
 const submissionsChannelName = "wordle";
 const answersChannelName = "wordle-answers";
 
-app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => {
+app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({ client, message, say }) => {
     const event = <GenericMessageEvent><unknown>message
 
     if (!event) {
@@ -35,17 +35,26 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6)*/, async ({ client, message, say }) => 
         case RegisterEntryResult.SUCCESS:
             const userId = event.user;
             const answersChannel = await getChannelByName(answersChannelName, client);
-            console.log(answersChannel);
-            if (answersChannel && answersChannel.id) {
-                // If final user leaves channel, it is automatically archived (atleast through GUI)
-                // if (answersChannel.is_archived) {
-                //     await client.conversations.unarchive({channel: answersChannel.id})
-                // }
 
+            if (answersChannel && answersChannel.id) {
+                if (answersChannel.is_archived) {
+                    console.log("Channel \"#"+answersChannelName+"\" is archived. Unarchiving...")
+                    await client.conversations.unarchive({channel: answersChannel.id})
+                }
+
+                console.log("Adding user to channel \"$"+answersChannel+"\" ")
                 await addUserToChannel(userId, answersChannel.id, client);
-                return console.log("Wordle entry recognized");
+            } else {
+                console.log("Channel \"#"+answersChannelName+"\" does not exist yet. Creating...")
+                // Recreate channel
+                const channel = (await app.client.conversations.create({name: answersChannelName, is_private: true})).channel
+
+                if (channel && channel.id) {
+                    console.log("Adding user to channel \"$"+answersChannel+"\" ")
+                    await addUserToChannel(userId, channel.id, client);
+                }
             }
-            console.log("Yepcock");
+
             return;
         case RegisterEntryResult.USER_NOT_REGISTERED:
             await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using /register yournamehere");
@@ -99,6 +108,10 @@ const getChannelName = async(channelId: string, client: WebClient) => {
 
 const getChannelByName = async(name: string, client: WebClient) => {
     return (await client.conversations.list({types: "public_channel,private_channel"})).channels?.find(channel => channel.name == name);
+}
+
+const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
+    await client.conversations.invite({ channel: channel, users: userId });
 }
 
 enum RegisterUserResult {
@@ -221,10 +234,6 @@ const getUserStats = async (): Promise<UserStat[]> => {
         })
     });
 };
-
-const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
-    await client.conversations.invite({ channel: channel, users: userId });
-}
 
 (async () => {
     const port = 3000
