@@ -1,5 +1,6 @@
 import {App} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
+import WebClient from "@slack/web-api/dist/WebClient";
 require("dotenv").config();
 
 const app = new App({
@@ -9,7 +10,10 @@ const app = new App({
     appToken: process.env.APP_TOKEN
 });
 
-app.message(/^(Wordle \d{3} \d\/\d)*/, async ({ message, say }) => {
+const submissionsChannel = "wordle";
+const answersChannel = "wordle-answers";
+
+app.message(/^(Wordle \d{3} \d\/\d)*/, async ({ client, message, say }) => {
     const event = <GenericMessageEvent><unknown>message
 
     if (!event) {
@@ -17,13 +21,19 @@ app.message(/^(Wordle \d{3} \d\/\d)*/, async ({ message, say }) => {
     }
 
     // Needs to be in the right channel
-    if (event.channel !== "wordle-submissions") {
+    if (event.channel !== submissionsChannel) {
         return
     }
 
     const userId = event.user;
-    console.log('Wordle entry recognized');
+    await addUserToChannel(userId, answersChannel, client);
+
+    console.log("Wordle entry recognized");
 });
+
+const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
+    await client.channels.invite({ user: userId, channel });
+}
 
 (async () => {
     const port = 3000
