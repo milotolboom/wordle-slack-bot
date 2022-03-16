@@ -236,12 +236,14 @@ const getUserStats = async (): Promise<UserStat[]> => {
     const stats: UserStat[] = allUsers.map((userId) => {
         const entries = allEntries.filter((entry) => entry.userId === userId);
         const wins = entries.filter((entry) => entry.score > 0).length;
+
         const averageSolvedAt = entries.map((entry) => entry.score).reduce((acc, curr) => {
-            // Failures to guess (0) should be counted as 2 penalty points (6 + 2)
-            // We multiply by 100 to make score more arbitrary
+            console.log(curr, curr * 100);
+            // Failures to guess (0) should be counted as 2 penalty points (6 + 2
             const normalizedScore = (curr === 0 ? 8 : curr) * 100;
+            // We multiply by 100 to make score more arbitrary
             return acc + normalizedScore;
-        }) / entries.length;
+        }, 0) / entries.length;
 
         return ({
             name: getUserName(userId),
