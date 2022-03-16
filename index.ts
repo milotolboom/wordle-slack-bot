@@ -210,7 +210,7 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
 
 const composeLeaderboardMessage = (stats: UserStat[]): string => {
     const userStats = stats.map((stat, index) =>
-        `${index + 1}. @_${stat.name}_ | Average solve score \`${stat.averageSolvedAt}\` | Played \`${stat.played}\` | Lost \`${stat.played - stat.wins}\``);
+        `${index + 1}. _${stat.name}_ | Average solve score \`${stat.averageSolvedAt}\` | Played \`${stat.played}\` | Lost \`${stat.played - stat.wins}\``);
 
     return `🧠 *Wordle Leaderboard* 🧠\n\n${userStats.join('\n')}`
 }
