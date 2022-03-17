@@ -16,7 +16,7 @@ const app = new App({
 });
 
 const cronJob = new CronJob('0 0 * * *', async () => {
-    kickAllInChannel(answersChannelName, app.client)
+    kickAllInPrivateChannel(answersChannelName, app.client)
     console.log("Kicked everyone from #"+answersChannelName+"! Night, night!");  
 });
 
@@ -42,7 +42,7 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({client, message, say}) => {
         case RegisterEntryResult.SUCCESS:
             await say("Your Wordle entry was successfully submitted! 🎉")
             const userId = event.user;
-            const answersChannel = await getChannelByName(answersChannelName, client);
+            const answersChannel = await getPrivateChannelByName(answersChannelName, client);
 
             if (answersChannel && answersChannel.id) {
                 if (answersChannel.is_archived) {
@@ -117,16 +117,16 @@ const getChannelName = async (channelId: string, client: WebClient) => {
     return (await client.conversations.info({channel: channelId})).channel?.name
 }
 
-const getChannelByName = async (name: string, client: WebClient) => {
-    return (await client.conversations.list({types: "public_channel,private_channel"})).channels?.find(channel => channel.name == name);
+const getPrivateChannelByName = async (name: string, client: WebClient) => {
+    return (await client.conversations.list({types: "private_channel"})).channels?.find(channel => channel.name == name);
 }
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
     await client.conversations.invite({channel: channel, users: userId});
 }
 
-const kickAllInChannel = async(name: string, client: WebClient) => {
-    const channel = await getChannelByName(name, client);
+const kickAllInPrivateChannel = async(name: string, client: WebClient) => {
+    const channel = await getPrivateChannelByName(name, client);
     const botId = (await client.auth.test()).user_id;
     if (channel) {
         const members = (await client.conversations.members({ channel: channel.id! })).members?.filter ( id => botId != id );
