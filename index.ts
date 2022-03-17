@@ -68,7 +68,7 @@ app.message(/^(Wordle \d{1,4} (\d|X)\/6).*/, async ({client, message, say}) => {
 
             return;
         case RegisterEntryResult.USER_NOT_REGISTERED:
-            await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using /register yournamehere");
+            await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using \`/wordle-register yournamehere\`");
             return;
         case RegisterEntryResult.ALREADY_ENTERED_TODAY:
             await say("You already registered an entry today. You can post your new results tomorrow.");
