@@ -2,6 +2,7 @@ import {App, SlashCommand} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
 import {PrismaClient} from "@prisma/client";
+import { CronJob } from 'cron';
 
 require("dotenv").config();
 
@@ -12,6 +13,10 @@ const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     socketMode: true,
     appToken: process.env.APP_TOKEN
+});
+
+const purgeCronJob = new CronJob('58 11 * * *', async () => {
+    kickAllInChannel(answersChannelName, app.client)  
 });
 
 const submissionsChannelName = "wordle";
@@ -117,6 +122,19 @@ const getChannelByName = async (name: string, client: WebClient) => {
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
     await client.conversations.invite({channel: channel, users: userId});
+}
+
+const kickAllInChannel = async(name: string, client: WebClient) => {
+    const channel = await getChannelByName(name, client);
+    const botId = (await client.auth.test()).user_id;
+    if (channel) {
+        const members = (await client.conversations.members({ channel: channel.id! })).members?.filter ( id => botId != id );
+        if (members) {
+            members.forEach ( member => {
+                client.conversations.kick({channel: channel.id!, user: member})
+            });
+        }
+    }
 }
 
 enum RegisterUserResult {

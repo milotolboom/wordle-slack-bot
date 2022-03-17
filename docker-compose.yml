@@ -8,5 +8,6 @@ services:
     build: .
     environment:
       - NODE_ENV=.env
+      - TZ=Europe/Amsterdam
     ports: 
       - "3000:3000"
