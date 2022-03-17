@@ -1,3 +1,4 @@
 .env
+.env.filmbased
 node_modules/
 .idea/
