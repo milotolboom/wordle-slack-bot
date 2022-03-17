@@ -15,7 +15,7 @@ const app = new App({
     appToken: process.env.APP_TOKEN
 });
 
-const purgeCronJob = new CronJob('58 11 * * *', async () => {
+const cronJob = new CronJob('58 11 * * *', async () => {
     kickAllInChannel(answersChannelName, app.client)  
 });
 
@@ -277,5 +277,6 @@ const getUserStats = async (): Promise<UserStat[]> => {
 (async () => {
     const port = 3000
     await app.start(process.env.PORT || port);
+    await cronJob.start()
     console.log(`⚡️ Wordle Bot is running on port ${port}!`);
 })();
