@@ -15,8 +15,9 @@ const app = new App({
     appToken: process.env.APP_TOKEN
 });
 
-const cronJob = new CronJob('58 11 * * *', async () => {
-    kickAllInChannel(answersChannelName, app.client)  
+const cronJob = new CronJob('0 0 * * *', async () => {
+    kickAllInChannel(answersChannelName, app.client)
+    console.log("Kicked everyone from #"+answersChannelName+"! Night, night!");  
 });
 
 const submissionsChannelName = "wordle";
