@@ -25,5 +25,16 @@ Now run the migration
 npx prisma migrate dev --name name-of-migration-here
 ```
 
+# Docker install 🐳
+Prerequisites:
+- cloned project
+- .env file with valid credentials
+- `docker-compose`
+- `docker`
 
+Then run:
+```bash
+docker-compose build
+docker-compose run -d
+```
 
