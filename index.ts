@@ -212,7 +212,7 @@ const registerEntry = async (event: GenericMessageEvent): Promise<RegisterEntryR
     const guesses = rawScore[0][0];
     const score: number = guesses === "X" ? 0 : +guesses;
 
-    if (score > 6 || score < 1) {
+    if (score > 6 || score < 0) {
         return RegisterEntryResult.INVALID_SCORE;
     }
 
