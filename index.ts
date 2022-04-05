@@ -84,12 +84,13 @@ app.command('/wordle-register', async ({command, ack, say}) => {
         await ack();
         const result = await registerUser(command);
 
-        switch (result) {
-            case RegisterUserResult.ALREADY_EXISTS:
-                await say("You already registered.")
+        switch (result.status) {
+            case RegisterUserStatus.NAME_CHANGE:
+                const nameChangeResult = result as NameChangeRegisterUserResult
+                await say(`\`${nameChangeResult.oldUsername}\` was renamed to \`${nameChangeResult.username}\``)
                 return;
-            case RegisterUserResult.SUCCESS:
-                await say("You successfully registered for the wordle battle royale.")
+            case RegisterUserStatus.SUCCESS:
+                await say(`You successfully registered for the wordle battle royale as \`${result.username}\`.`)
                 return;
         }
     } catch (error) {
@@ -138,8 +139,27 @@ const kickAllInPrivateChannel = async(name: string, client: WebClient) => {
     }
 }
 
-enum RegisterUserResult {
-    SUCCESS, ALREADY_EXISTS
+enum RegisterUserStatus {
+    SUCCESS, NAME_CHANGE
+}
+
+class RegisterUserResult {
+    status: RegisterUserStatus;
+    username: string;
+
+    constructor(status: RegisterUserStatus, username: string) {
+        this.status = status
+        this.username = username
+    }
+}
+
+class NameChangeRegisterUserResult extends RegisterUserResult {
+    oldUsername: string;
+
+    constructor(status: RegisterUserStatus, username: string, oldUsername: string) {
+        super(status, username);
+        this.oldUsername = oldUsername;
+    }
 }
 
 const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> => {
@@ -153,7 +173,19 @@ const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> 
     });
 
     if (user) {
-        return RegisterUserResult.ALREADY_EXISTS;
+        await prisma.user.update({
+            where: {
+                id: user.id,
+              },
+            data: {
+                name: username,
+            }
+        })
+        return new NameChangeRegisterUserResult(
+            RegisterUserStatus.NAME_CHANGE,
+            username,
+            user.name
+        );
     }
 
     await prisma.user.create({
@@ -163,7 +195,9 @@ const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> 
         }
     });
 
-    return RegisterUserResult.SUCCESS;
+    return new RegisterUserResult(
+        RegisterUserStatus.NAME_CHANGE,
+        username);
 };
 
 enum RegisterEntryResult {
