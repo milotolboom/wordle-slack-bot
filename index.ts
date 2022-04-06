@@ -137,8 +137,8 @@ app.command('/wordle-stats', async ({command, ack, say}) => {
         });
 
         if (user) {
-            const entries = await getUserEntries(command.user_id);
-            const returnMessage = composeStatsMessage(command, entries, user);
+            const entries = await getUserEntries(userId);
+            const returnMessage = composeStatsMessage(user, entries);
             await say(returnMessage);
         } else if (isForOtherUser) {
             await say(`User is not registered to Wordle Battle Royale! Please force them at gunpoint to register using \`/wordle-register yournamehere\``);
@@ -305,7 +305,7 @@ const composeLeaderboardMessage = (stats: UserStat[]): string => {
     return `🧠 *Wordle Leaderboard* 🧠\n\n${userStats.join('\n')}`
 }
 
-const composeStatsMessage = (command: SlashCommand, entries: Entry[], user: User): string => {
+const composeStatsMessage = (user: User, entries: Entry[]): string => {
     interface R {
         score: number;
         amount: number;
@@ -346,7 +346,7 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[], user: User
         return Array.from('█'.repeat(scaled)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
-    return `*Stats for <@${command.user_name}> (a.k.a. ${user.name})*\n
+    return `*Stats for <@${user.id}> (a.k.a. ${user.name})*\n
     1️⃣: ${getBarsForScore(1)} (${getAmountForScore(1)})
     2️⃣: ${getBarsForScore(2)} (${getAmountForScore(2)})
     3️⃣: ${getBarsForScore(3)} (${getAmountForScore(3)})
