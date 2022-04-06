@@ -122,7 +122,8 @@ app.command('/wordle-stats', async ({command, ack, say}) => {
         var userId = command.user_id;
         var isForOtherUser = false;
         console.log(command.text);
-        if (userIdMatch && userIdMatch[1]) {
+        console.log(userIdMatch);
+        if (userIdMatch) {
             console.log(userIdMatch[1]);
             userId = userIdMatch[1];
             isForOtherUser = true;
