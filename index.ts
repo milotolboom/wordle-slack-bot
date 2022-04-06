@@ -2,7 +2,7 @@ import {App, SlashCommand} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
 import {PrismaClient} from "@prisma/client";
-import { CronJob } from 'cron';
+import {CronJob} from 'cron';
 
 require("dotenv").config();
 
@@ -17,7 +17,7 @@ const app = new App({
 
 const cronJob = new CronJob('0 0 * * *', async () => {
     kickAllInPrivateChannel(answersChannelName, app.client)
-    console.log("Kicked everyone from #"+answersChannelName+"! Night, night!");  
+    console.log("Kicked everyone from #" + answersChannelName + "! Night, night!");
 });
 
 const submissionsChannelName = "wordle";
@@ -110,7 +110,20 @@ app.command('/wordle-leaderboard', async ({command, ack, say}) => {
         await say(returnMessage);
     } catch (error) {
         console.error(error);
-        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 2")
+        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 2");
+    }
+});
+
+app.command('/wordle-stats', async ({command, ack, say}) => {
+    try {
+        await ack();
+
+        const entries = await getUserEntries(command.user_id);
+        const returnMessage = composeStatsMessage(command, entries);
+        await say(returnMessage);
+    } catch (error) {
+        console.error(error);
+        await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 3");
     }
 });
 
@@ -126,13 +139,13 @@ const addUserToChannel = async (userId: string, channel: string, client: WebClie
     await client.conversations.invite({channel: channel, users: userId});
 }
 
-const kickAllInPrivateChannel = async(name: string, client: WebClient) => {
+const kickAllInPrivateChannel = async (name: string, client: WebClient) => {
     const channel = await getPrivateChannelByName(name, client);
     const botId = (await client.auth.test()).user_id;
     if (channel) {
-        const members = (await client.conversations.members({ channel: channel.id! })).members?.filter ( id => botId != id );
+        const members = (await client.conversations.members({channel: channel.id!})).members?.filter(id => botId != id);
         if (members) {
-            members.forEach ( member => {
+            members.forEach(member => {
                 client.conversations.kick({channel: channel.id!, user: member})
             });
         }
@@ -176,7 +189,7 @@ const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> 
         await prisma.user.update({
             where: {
                 id: user.id,
-              },
+            },
             data: {
                 name: username,
             }
@@ -268,6 +281,61 @@ const composeLeaderboardMessage = (stats: UserStat[]): string => {
     return `🧠 *Wordle Leaderboard* 🧠\n\n${userStats.join('\n')}`
 }
 
+const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string => {
+    interface R {
+        score: number;
+        amount: number;
+    }
+
+    const splitByResult = entries.reduce<R[]>((acc, curr) => {
+        const score = curr.score;
+        const existing = acc.find(it => it.score === score);
+
+        if (!existing) {
+            acc.push({score, amount: 1});
+            return acc;
+        }
+
+        existing.amount++;
+
+        return acc;
+    }, []);
+
+    const getAmountForScore = (score): number => splitByResult.find(it => it.score === score)?.amount || 0;
+    const totalAmount = entries.length;
+    const amountOfBarBlocks = 30;
+    const max = splitByResult.sort((a, b) => a.amount + b.amount)[0];
+
+    const getMultiplier = () => {
+        const percentage = max.amount / totalAmount;
+        const scaled = Math.round(amountOfBarBlocks * percentage);
+        return amountOfBarBlocks / scaled;
+    };
+
+    const multiplier = getMultiplier();
+
+    const getBarsForScore = (score): string => {
+        const amount = getAmountForScore(score);
+        const percentage = amount / totalAmount;
+        const scaled = amountOfBarBlocks * percentage;
+        // map it so the highest bar always has X items
+        const mapped = Math.round(scaled * multiplier);
+
+        const rest = amountOfBarBlocks - mapped;
+        return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest));
+    }
+
+    return `*Stats for ${command.user_name}*\n
+    1️⃣: ${getBarsForScore(1)} (${getAmountForScore(1)})
+    2️⃣: ${getBarsForScore(2)} (${getAmountForScore(2)})
+    3️⃣: ${getBarsForScore(3)} (${getAmountForScore(3)})
+    4️⃣: ${getBarsForScore(4)} (${getAmountForScore(4)})
+    5️⃣: ${getBarsForScore(5)} (${getAmountForScore(5)})
+    6️⃣: ${getBarsForScore(6)} (${getAmountForScore(6)})
+    ❌: ${getBarsForScore(0)} (${getAmountForScore(0)})
+    `;
+}
+
 interface UserStat {
     name: string;
     played: number;
@@ -307,6 +375,23 @@ const getUserStats = async (): Promise<UserStat[]> => {
     });
 
     return stats.sort((a, b) => a.averageSolvedAt - b.averageSolvedAt);
+};
+
+type Entry = {
+    id: number
+    createdAt: Date
+    updatedAt: Date
+    rawResult: string
+    score: number
+    userId: string
+}
+
+const getUserEntries = async (userId: string): Promise<Entry[]> => {
+    const entries = await prisma.entry.findMany({
+        where: {userId},
+    });
+
+    return entries as Entry[];
 };
 
 (async () => {
