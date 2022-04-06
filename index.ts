@@ -303,7 +303,7 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
 
     const getAmountForScore = (score): number => splitByResult.find(it => it.score === score)?.amount || 0;
     const totalAmount = entries.length;
-    const amountOfBarBlocks = 30;
+    const amountOfBarBlocks = 20;
     const max = splitByResult.sort((a, b) => a.amount + b.amount)[0];
 
     const getMultiplier = () => {
