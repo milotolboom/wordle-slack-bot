@@ -304,7 +304,7 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
     const getAmountForScore = (score): number => splitByResult.find(it => it.score === score)?.amount || 0;
     const totalAmount = entries.length;
     const amountOfBarBlocks = 20;
-    const max = splitByResult.sort((a, b) => a.amount + b.amount)[0];
+    const max = splitByResult.sort((a, b) => b.amount - a.amount)[0];
 
     const getMultiplier = () => {
         const percentage = max.amount / totalAmount;
@@ -316,7 +316,6 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
 
     const getBarsForScore = (score): string => {
         const amount = getAmountForScore(score);
-        console.log(`Calculating precentage of ${amount} / ${max.amount}...`)
         const percentage = amount / max.amount;
         const scaled = amountOfBarBlocks * percentage;
         const rest = Math.max(amountOfBarBlocks - scaled, 0);
