@@ -308,8 +308,8 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
 
     const getMultiplier = () => {
         const percentage = max.amount / totalAmount;
-        const onScaleOfTen = Math.round(amountOfBarBlocks * percentage);
-        return amountOfBarBlocks / onScaleOfTen;
+        const scaled = Math.round(amountOfBarBlocks * percentage);
+        return amountOfBarBlocks / scaled;
     };
 
     const multiplier = getMultiplier();
@@ -317,10 +317,12 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
     const getBarsForScore = (score): string => {
         const amount = getAmountForScore(score);
         const percentage = amount / totalAmount;
-        const onScaleOfTen = amountOfBarBlocks * percentage;
-        // map it so the highest bar always has 10 items
-        const mapped = Math.round(onScaleOfTen * multiplier);
-        return Array.from('█'.repeat(mapped)).join('');
+        const scaled = amountOfBarBlocks * percentage;
+        // map it so the highest bar always has X items
+        const mapped = Math.round(scaled * multiplier);
+
+        const rest = amountOfBarBlocks - mapped;
+        return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest));
     }
 
     return `*Stats for ${command.user_name}*\n
