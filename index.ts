@@ -1,7 +1,7 @@
 import {App, SlashCommand} from "@slack/bolt";
 import {GenericMessageEvent} from "@slack/bolt/dist/types/events/message-events";
 import WebClient from "@slack/web-api/dist/WebClient";
-import {PrismaClient} from "@prisma/client";
+import {PrismaClient, User} from "@prisma/client";
 import {CronJob} from 'cron';
 
 require("dotenv").config();
@@ -118,9 +118,29 @@ app.command('/wordle-stats', async ({command, ack, say}) => {
     try {
         await ack();
 
-        const entries = await getUserEntries(command.user_id);
-        const returnMessage = composeStatsMessage(command, entries);
-        await say(returnMessage);
+        const userIdMatch = command.text.match('/<@([a-zA-Z0-9]\w+)\|user>/');
+        var userId = command.user_id;
+        var isForOtherUser = false;
+        if (userIdMatch && userIdMatch[1]) {
+            userId = userIdMatch[1];
+            isForOtherUser = true;
+        }
+
+        const user = await prisma.user.findFirst({
+            where: {
+                id: userId,
+            }
+        });
+
+        if (user) {
+            const entries = await getUserEntries(command.user_id);
+            const returnMessage = composeStatsMessage(command, entries, user);
+            await say(returnMessage);
+        } else if (isForOtherUser) {
+            await say(`User is not registered to Wordle Battle Royale! Please force them at gunpoint to register using \`/wordle-register yournamehere\``);
+        } else {
+            await say("You sir are not yet registered to compete within the Wordle leaderboards. Please register using \`/wordle-register yournamehere\`");
+        }
     } catch (error) {
         console.error(error);
         await say("Oopsie woopsie, we made a fucky wucky! Pweease twy again later! Fuckywuckycode: 3");
@@ -281,7 +301,7 @@ const composeLeaderboardMessage = (stats: UserStat[]): string => {
     return `🧠 *Wordle Leaderboard* 🧠\n\n${userStats.join('\n')}`
 }
 
-const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string => {
+const composeStatsMessage = (command: SlashCommand, entries: Entry[], user: User): string => {
     interface R {
         score: number;
         amount: number;
@@ -322,7 +342,7 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
         return Array.from('█'.repeat(scaled)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
-    return `*Stats for ${command.user_name}*\n
+    return `*Stats for <@${command.user_name}> (a.k.a. ${user.name})*\n
     1️⃣: ${getBarsForScore(1)} (${getAmountForScore(1)})
     2️⃣: ${getBarsForScore(2)} (${getAmountForScore(2)})
     3️⃣: ${getBarsForScore(3)} (${getAmountForScore(3)})
