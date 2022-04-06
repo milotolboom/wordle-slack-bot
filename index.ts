@@ -319,9 +319,8 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
         const percentage = amount / totalAmount;
         const scaled = amountOfBarBlocks * percentage;
         // map it so the highest bar always has X items
-        const mapped = Math.round(scaled * multiplier);
-
-        const rest = amountOfBarBlocks - mapped;
+        const mapped = Math.max(Math.round(scaled * multiplier), 0);
+        const rest = Math.max(amountOfBarBlocks - mapped, 0);
         return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
