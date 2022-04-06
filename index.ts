@@ -118,7 +118,7 @@ app.command('/wordle-stats', async ({command, ack, say}) => {
     try {
         await ack();
 
-        const userIdMatch = command.text.match('/<@([a-zA-Z0-9]\w+)\|user>/');
+        const userIdMatch = command.text.match('/<@([a-zA-Z0-9]\w+)\|([a-zA-Z0-9]\w+)>/');
         var userId = command.user_id;
         var isForOtherUser = false;
         console.log(command.text);
