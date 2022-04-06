@@ -316,12 +316,10 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
 
     const getBarsForScore = (score): string => {
         const amount = getAmountForScore(score);
-        const percentage = amount / totalAmount;
+        const percentage = amount / max.amount;
         const scaled = amountOfBarBlocks * percentage;
-        // map it so the highest bar always has X items
-        const mapped = Math.max(Math.round(scaled * multiplier), 0);
-        const rest = Math.max(amountOfBarBlocks - mapped, 0);
-        return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest)).join('');
+        const rest = Math.max(amountOfBarBlocks - scaled, 0);
+        return Array.from('█'.repeat(scaled)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
     return `*Stats for ${command.user_name}*\n
