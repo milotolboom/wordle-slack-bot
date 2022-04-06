@@ -89,7 +89,7 @@ app.command('/wordle-register', async ({command, ack, say}) => {
                 const nameChangeResult = result as NameChangeRegisterUserResult
                 await say(`\`${nameChangeResult.oldUsername}\` was renamed to \`${nameChangeResult.username}\``)
                 return;
-            case RegisterUserStatus.SUCCESS:
+            case RegisterUserStatus.NEW_USER:
                 await say(`You successfully registered for the wordle battle royale as \`${result.username}\`.`)
                 return;
         }
@@ -140,7 +140,7 @@ const kickAllInPrivateChannel = async(name: string, client: WebClient) => {
 }
 
 enum RegisterUserStatus {
-    SUCCESS, NAME_CHANGE
+    NEW_USER, NAME_CHANGE
 }
 
 class RegisterUserResult {
@@ -196,7 +196,7 @@ const registerUser = async (command: SlashCommand): Promise<RegisterUserResult> 
     });
 
     return new RegisterUserResult(
-        RegisterUserStatus.NAME_CHANGE,
+        RegisterUserStatus.NEW_USER,
         username);
 };
 
