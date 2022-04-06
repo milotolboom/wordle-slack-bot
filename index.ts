@@ -322,7 +322,7 @@ const composeStatsMessage = (command: SlashCommand, entries: Entry[]): string =>
         const mapped = Math.round(scaled * multiplier);
 
         const rest = amountOfBarBlocks - mapped;
-        return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest));
+        return Array.from('█'.repeat(mapped)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
     return `*Stats for ${command.user_name}*\n
