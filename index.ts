@@ -325,11 +325,12 @@ const composeStatsMessage = (user: User, entries: Entry[]): string => {
     const getAmountForScore = (score): number => splitByResult.find(it => it.score === score)?.amount || 0;
     const totalAmount = entries.length;
     const amountOfBarBlocks = 20;
-    const max = splitByResult.sort((a, b) => b.amount - a.amount)[0]?.amount || 0;
+    const max = splitByResult.sort((a, b) => b.amount - a.amount)[0]?.amount || 1;
 
     const getBarsForScore = (score): string => {
         const amount = getAmountForScore(score);
         const percentage = amount / max;
+        console.log(`max: ${max}`);
         const scaled = Math.round(amountOfBarBlocks * percentage);
         console.log(`scaled: ${scaled}`);
         const rest = Math.max(amountOfBarBlocks - scaled, 0);
