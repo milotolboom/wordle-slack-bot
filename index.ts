@@ -122,10 +122,7 @@ app.command('/wordle-stats', async ({command, ack, say}) => {
         const userIdMatch = command.text.match(taggedUserRegex);
         var userId = command.user_id;
         var isForOtherUser = false;
-        console.log(command.text);
-        console.log(userIdMatch);
         if (userIdMatch) {
-            console.log(userIdMatch[1]);
             userId = userIdMatch[1];
             isForOtherUser = true;
         }
@@ -380,7 +377,6 @@ const getUserStats = async (): Promise<UserStat[]> => {
         const wins = entries.filter((entry) => entry.score > 0).length;
 
         const averageSolvedAt = entries.map((entry) => entry.score).reduce((acc, curr) => {
-            console.log(curr, curr * 100);
             // Failures to guess (0) should be counted as 2 penalty points (6 + 2
             const normalizedScore = (curr === 0 ? 8 : curr) * 100;
             // We multiply by 100 to make score more arbitrary
