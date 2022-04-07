@@ -331,6 +331,7 @@ const composeStatsMessage = (user: User, entries: Entry[]): string => {
         const amount = getAmountForScore(score);
         const percentage = amount / max.amount;
         const scaled = Math.round(amountOfBarBlocks * percentage);
+        console.log(`scaled: ${scaled}`);
         const rest = Math.max(amountOfBarBlocks - scaled, 0);
         console.log(`rest: ${rest}`);
         return Array.from('█'.repeat(scaled)).join('') + Array.from('▁'.repeat(rest)).join('');
