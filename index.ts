@@ -325,7 +325,7 @@ const composeStatsMessage = (user: User, entries: Entry[]): string => {
     const getAmountForScore = (score): number => splitByResult.find(it => it.score === score)?.amount || 0;
     const totalAmount = entries.length;
     const amountOfBarBlocks = 20;
-    const max = splitByResult.sort((a, b) => b.amount - a.amount)[0];
+    const max = splitByResult.sort((a, b) => b.amount - a.amount)[0] || 1;
 
     const getMultiplier = () => {
         const percentage = max.amount / totalAmount;
