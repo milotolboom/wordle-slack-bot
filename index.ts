@@ -327,19 +327,12 @@ const composeStatsMessage = (user: User, entries: Entry[]): string => {
     const amountOfBarBlocks = 20;
     const max = splitByResult.sort((a, b) => b.amount - a.amount)[0] || 1;
 
-    const getMultiplier = () => {
-        const percentage = max.amount / totalAmount;
-        const scaled = Math.round(amountOfBarBlocks * percentage);
-        return amountOfBarBlocks / scaled;
-    };
-
-    const multiplier = getMultiplier();
-
     const getBarsForScore = (score): string => {
         const amount = getAmountForScore(score);
         const percentage = amount / max.amount;
         const scaled = Math.round(amountOfBarBlocks * percentage);
         const rest = Math.max(amountOfBarBlocks - scaled, 0);
+        console.log(`rest: ${rest}`);
         return Array.from('█'.repeat(scaled)).join('') + Array.from('▁'.repeat(rest)).join('');
     }
 
