@@ -153,7 +153,7 @@ const getChannelName = async (channelId: string, client: WebClient) => {
 }
 
 const getPrivateChannelByName = async (name: string, client: WebClient) => {
-    return (await client.conversations.list({types: "private_channel"})).channels?.find(channel => channel.name == name);
+    return (await client.conversations.list({types: "private_channel", limit: 1000})).channels?.find(channel => channel.name == name);
 }
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
