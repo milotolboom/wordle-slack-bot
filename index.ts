@@ -153,7 +153,7 @@ const getChannelName = async (channelId: string, client: WebClient) => {
 }
 
 const getPrivateChannelByName = async (name: string, client: WebClient) => {
-    return (await client.conversations.list({types: "private_channel"})).channels?.find(channel => channel.name == name);
+    return (await client.conversations.list({types: "private_channel", limit: 1000})).channels?.find(channel => channel.name == name);
 }
 
 const addUserToChannel = async (userId: string, channel: string, client: WebClient) => {
@@ -406,9 +406,19 @@ const getUserEntries = async (userId: string): Promise<Entry[]> => {
     return entries as Entry[];
 };
 
-(async () => {
-    const port = 3000
-    await app.start(process.env.PORT || port);
-    await cronJob.start()
-    console.log(`⚡️ Wordle Bot is running on port ${port}!`);
-})();
+for (var i=0; i<process.argv.length;i++) {
+  switch (process.argv[i]) {
+    case 'purge': {
+      kickAllInPrivateChannel(answersChannelName, app.client);
+      break;
+    }
+    default: {
+      (async () => {
+        const port = 3000
+        await app.start(process.env.PORT || port);
+        await cronJob.start()
+        console.log(`⚡ Wordle Bot is running on port ${port}!`);
+      })();
+    }
+  }
+}
